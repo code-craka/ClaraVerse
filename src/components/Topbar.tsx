@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Sun, Moon, Monitor, Clock, LogOut, Loader2 } from 'lucide-react';
 import { useTheme, ThemeMode } from '../hooks/useTheme';
 import UserProfileButton from './common/UserProfileButton';
@@ -18,6 +18,12 @@ const Topbar = ({ userName, onPageChange, projectTitle, showProjectTitle = false
   const [timezone, setTimezone] = useState<string>(Intl.DateTimeFormat().resolvedOptions().timeZone);
   const [personalInfo, setPersonalInfo] = useState<any>(null);
   const [isExiting, setIsExiting] = useState(false);
+
+  const memoizedOnPageChange = useCallback((page: string) => {
+    if (onPageChange) {
+      onPageChange(page);
+    }
+  }, [onPageChange]);
 
   useEffect(() => {
     let timer = setInterval(() => setNow(new Date()), 1000);
@@ -149,10 +155,10 @@ const Topbar = ({ userName, onPageChange, projectTitle, showProjectTitle = false
           {theme === 'dark' && <Moon className="w-5 h-5 text-gray-600 dark:text-gray-300" />}
           {theme === 'system' && <Monitor className="w-5 h-5 text-gray-600 dark:text-gray-300" />}
         </button>
-        <NotificationPanel onNavigateToClara={() => onPageChange?.('clara')} />
+        <NotificationPanel onNavigateToClara={() => memoizedOnPageChange('clara')} />
         <UserProfileButton
           userName={userName || 'Profile'}
-          onPageChange={onPageChange || (() => {})}
+          onPageChange={memoizedOnPageChange}
         />
         <button 
           onClick={handleCleanup}
