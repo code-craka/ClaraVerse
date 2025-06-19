@@ -7,6 +7,9 @@ import MCPSettings from './MCPSettings';
 import ModelManager from './ModelManager';
 import ToolBelt from './ToolBelt';
 import GPUDiagnostics from './GPUDiagnostics';
+import { createLogger } from '../utils/logger';
+
+const logger = createLogger('Settings');
 
 // Type for llama.cpp update info
 interface LlamacppUpdateInfo {
@@ -168,8 +171,8 @@ const Settings = () => {
       if (personalInfo?.startup_settings) {
         setStartupConfig(personalInfo.startup_settings);
       }
-    } catch (error) {
-      console.error('Failed to load startup configuration:', error);
+    } catch (err) {
+      logger.error('Failed to load startup configuration:', err);
     }
   };
 
@@ -193,8 +196,8 @@ const Settings = () => {
       
       await db.updatePersonalInfo(updatedPersonalInfo);
       
-    } catch (error) {
-      console.error('Failed to update startup configuration:', error);
+    } catch (err) {
+      logger.error('Failed to update startup configuration:', err);
       // Revert on error
       setStartupConfig(startupConfig);
     }
@@ -205,8 +208,8 @@ const Settings = () => {
     try {
       // For now, just show a message - this would need to be implemented in electron
       alert('✅ First-time setup reset functionality will be implemented in a future update.');
-    } catch (error) {
-      console.error('Failed to reset first-time setup:', error);
+    } catch (err) {
+      logger.error('Failed to reset first-time setup:', err);
       alert('❌ Failed to reset first-time setup. Please try again.');
     }
   };
@@ -219,8 +222,8 @@ const Settings = () => {
         if (wallpaper) {
           setWallpaperUrl(wallpaper);
         }
-      } catch (error) {
-        console.error('Error loading wallpaper:', error);
+      } catch (err) {
+        logger.error('Error loading wallpaper:', err);
       }
     };
     loadWallpaper();
@@ -525,8 +528,8 @@ const Settings = () => {
             setWallpaperUrl(base64String);
           };
           reader.readAsDataURL(file);
-        } catch (error) {
-          console.error('Error setting wallpaper:', error);
+        } catch (err) {
+          logger.error('Error setting wallpaper:', err);
         }
       }
     };
@@ -538,8 +541,8 @@ const Settings = () => {
     try {
       await db.setWallpaper('');
       setWallpaperUrl(null);
-    } catch (error) {
-      console.error('Error clearing wallpaper:', error);
+    } catch (err) {
+      logger.error('Error clearing wallpaper:', err);
     }
   };
 
@@ -605,9 +608,9 @@ const Settings = () => {
         apiKey: '',
         isEnabled: true
       });
-    } catch (error) {
-      console.error('Error adding provider:', error);
-      if (error instanceof Error && error.message.includes("Clara's Pocket provider already exists")) {
+    } catch (err) {
+      logger.error('Error adding provider:', err);
+      if (err instanceof Error && err.message.includes("Clara's Pocket provider already exists")) {
         alert("⚠️ Clara's Pocket provider already exists. Only one instance is allowed.");
       } else {
         alert('❌ Failed to add provider. Please try again.');
@@ -648,8 +651,8 @@ const Settings = () => {
         apiKey: '',
         isEnabled: true
       });
-    } catch (error) {
-      console.error('Error updating provider:', error);
+    } catch (err) {
+      logger.error('Error updating provider:', err);
     }
   };
 
@@ -657,8 +660,8 @@ const Settings = () => {
     try {
       await deleteProvider(providerId);
       setShowDeleteConfirm(null);
-    } catch (error) {
-      console.error('Error deleting provider:', error);
+    } catch (err) {
+      logger.error('Error deleting provider:', err);
     }
   };
 
@@ -675,9 +678,9 @@ const Settings = () => {
       } else {
         setTestResults(prev => ({ ...prev, [providerId]: 'error' }));
       }
-    } catch (error) {
+    } catch (err) {
       setTestResults(prev => ({ ...prev, [providerId]: 'error' }));
-      console.error('Ollama connection test failed:', error);
+      logger.error('Ollama connection test failed:', err);
     } finally {
       setTestingProvider(null);
 
@@ -699,8 +702,8 @@ const Settings = () => {
           await setPrimaryProvider(enabledProviders[0].id);
         }
       }
-    } catch (error) {
-      console.error('Error setting primary provider:', error);
+    } catch (err) {
+      logger.error('Error setting primary provider:', err);
     }
   };
 
@@ -758,7 +761,7 @@ const Settings = () => {
 
       const isRunning = await detectOllamaInstallation();
       if (isRunning) {
-        console.log('Auto-detected Ollama installation, adding provider...');
+        logger.info('Auto-detected Ollama installation, adding provider...');
         await addProvider({
           name: 'Ollama (Local)',
           type: 'ollama',
@@ -768,8 +771,8 @@ const Settings = () => {
           isPrimary: false
         });
       }
-    } catch (error) {
-      console.log('Auto-detection error:', error);
+    } catch (err) {
+      logger.info('Auto-detection error:', err);
     }
   };
 
@@ -778,7 +781,7 @@ const Settings = () => {
     const electron = window.electron as any;
 
     if (!electron?.checkLlamacppUpdates) {
-      console.error('Llama.cpp update functionality not available');
+      logger.error('Llama.cpp update functionality not available');
       setLlamacppUpdateInfo({
         error: 'Llama.cpp update functionality is not available in this version.',
         hasUpdate: false,

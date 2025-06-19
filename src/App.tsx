@@ -1,23 +1,35 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import Sidebar from './components/Sidebar';
 import Topbar from './components/Topbar';
 import Dashboard from './components/Dashboard';
-import Settings from './components/Settings';
+// import Settings from './components/Settings';
 import Debug from './components/Debug';
 import Onboarding from './components/Onboarding';
 import ImageGen from './components/ImageGen';
-import Gallery from './components/Gallery';
+// import Gallery from './components/Gallery';
 import Help from './components/Help';
-import N8N from './components/N8N';
+// import N8N from './components/N8N';
 import Servers from './components/Servers';
-import AgentStudio from './components/AgentStudio';
-import Lumaui from './components/Lumaui';
+// import AgentStudio from './components/AgentStudio';
+// import Lumaui from './components/Lumaui';
 import LumaUILite from './components/LumaUILite';
 import Notebooks from './components/Notebooks';
 import { db } from './db';
 import { ProvidersProvider } from './contexts/ProvidersContext';
 import ClaraAssistant from './components/ClaraAssistant';
 import { StartupService } from './services/startupService';
+
+const Settings = lazy(() => import('./components/Settings'));
+const Gallery = lazy(() => import('./components/Gallery'));
+const N8N = lazy(() => import('./components/N8N'));
+const AgentStudio = lazy(() => import('./components/AgentStudio'));
+const Lumaui = lazy(() => import('./components/Lumaui'));
+
+const LoadingFallback = () => (
+  <div className="flex justify-center items-center h-full">
+    <div className="text-xl font-semibold">Loading Page...</div>
+  </div>
+);
 
 function App() {
   const [activePage, setActivePage] = useState(() => localStorage.getItem('activePage') || 'dashboard');
@@ -74,7 +86,7 @@ function App() {
     // This allows it to run in the background
     
     if (activePage === 'agents') {
-      return <AgentStudio onPageChange={setActivePage} userName={userInfo?.name} />;
+      return <Suspense fallback={<LoadingFallback />}><AgentStudio onPageChange={setActivePage} userName={userInfo?.name} /></Suspense>;
     }
     
 
@@ -84,11 +96,11 @@ function App() {
     }
 
     if (activePage === 'gallery') {
-      return <Gallery onPageChange={setActivePage} />;
+      return <Suspense fallback={<LoadingFallback />}><Gallery onPageChange={setActivePage} /></Suspense>;
     }
 
     if (activePage === 'n8n') {
-      return <N8N onPageChange={setActivePage} />;
+      return <Suspense fallback={<LoadingFallback />}><N8N onPageChange={setActivePage} /></Suspense>;
     }
     
     if (activePage === 'servers') {
@@ -103,25 +115,27 @@ function App() {
           <Topbar userName={userInfo?.name} onPageChange={setActivePage} />
           
           <main className="">
-            {(() => {
-              switch (activePage) {
-                case 'settings':
-                  return <Settings alphaFeaturesEnabled={alphaFeaturesEnabled} setAlphaFeaturesEnabled={setAlphaFeaturesEnabled} />;
-                case 'debug':
-                  return <Debug />;
-                case 'help':
-                  return <Help />;
-                case 'notebooks':
-                  return <Notebooks />;
-                case 'lumaui':
-                  return <Lumaui onPageChange={setActivePage} />;
-                case 'lumaui-lite':
-                  return <LumaUILite />;
-                case 'dashboard':
-                default:
-                  return <Dashboard onPageChange={setActivePage} />;
-              }
-            })()}
+            <Suspense fallback={<LoadingFallback />}>
+              {(() => {
+                switch (activePage) {
+                  case 'settings':
+                    return <Settings alphaFeaturesEnabled={alphaFeaturesEnabled} setAlphaFeaturesEnabled={setAlphaFeaturesEnabled} />;
+                  case 'debug':
+                    return <Debug />;
+                  case 'help':
+                    return <Help />;
+                  case 'notebooks':
+                    return <Notebooks />;
+                  case 'lumaui':
+                    return <Lumaui onPageChange={setActivePage} />;
+                  case 'lumaui-lite':
+                    return <LumaUILite />;
+                  case 'dashboard':
+                  default:
+                    return <Dashboard onPageChange={setActivePage} />;
+                }
+              })()}
+            </Suspense>
           </main>
         </div>
       </div>
@@ -142,6 +156,7 @@ function App() {
             
             {/* Render other content when not on Clara page */}
             {activePage !== 'clara' && renderContent()}
+            {/* Fallback for renderContent can be added here if needed, but individual Suspense wrappers are more granular */}
           </>
         )}
       </div>

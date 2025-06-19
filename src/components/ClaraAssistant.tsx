@@ -37,8 +37,11 @@ import useAutonomousAgentStatus from '../hooks/useAutonomousAgentStatus';
 // Import TTS service
 import { claraTTSService } from '../services/claraTTSService';
 
-  // Import artifact detection service
+// Import artifact detection service
 import ArtifactDetectionService, { DetectionContext } from '../services/artifactDetectionService';
+
+// Import custom logger
+import { createLogger } from '../utils/logger';
 
 // Import clipboard test functions for development
 if (process.env.NODE_ENV === 'development') {
@@ -428,6 +431,8 @@ const useIsVisible = () => {
   return isVisible;
 };
 
+const logger = createLogger('ClaraAssistant');
+
 const ClaraAssistant: React.FC<ClaraAssistantProps> = ({ onPageChange }) => {
   // Check if Clara is currently visible (for background operation)
   const isVisible = useIsVisible();
@@ -475,7 +480,7 @@ const ClaraAssistant: React.FC<ClaraAssistantProps> = ({ onPageChange }) => {
     try {
       // Parse new professional status messages
       if (chunk.includes('**AGENT_STATUS:ACTIVATED**')) {
-        console.log('🤖 ACTIVATION DETECTED: Starting autonomous agent');
+        logger.info('🤖 ACTIVATION DETECTED: Starting autonomous agent');
         autonomousAgentStatus.startAgent();
         autonomousAgentStatus.updatePhase('initializing', 'Autonomous agent activated');
       } else if (chunk.includes('**AGENT_STATUS:PLAN_CREATED**')) {
@@ -507,7 +512,7 @@ const ClaraAssistant: React.FC<ClaraAssistantProps> = ({ onPageChange }) => {
           autonomousAgentStatus.setToolsLoaded(toolCount);
         }
       } else if (chunk.includes('**Task completed**') || chunk.includes('**Auto Mode Session Summary**')) {
-        console.log('✅ COMPLETION DETECTED in stream: Task completed message found');
+        logger.info('✅ COMPLETION DETECTED in stream: Task completed message found');
         autonomousAgentStatus.updatePhase('completed', 'Task completed successfully');
         // Auto-hide status panel after 2 seconds to show clean results
         autonomousAgentStatus.completeAgent('Task completed successfully', 2000);
@@ -524,8 +529,8 @@ const ClaraAssistant: React.FC<ClaraAssistantProps> = ({ onPageChange }) => {
           autonomousAgentStatus.startToolExecution(toolName, `Executing ${toolName} operation`);
         }
       }
-    } catch (error) {
-      console.warn('Failed to parse agent status from chunk:', error);
+    } catch (err) {
+      logger.warn('Failed to parse agent status from chunk:', err);
     }
   }, [autonomousAgentStatus]);
 
@@ -598,12 +603,12 @@ const ClaraAssistant: React.FC<ClaraAssistantProps> = ({ onPageChange }) => {
     
     // Return cached result if still valid
     if (cached && (now - cached.timestamp < HEALTH_CHECK_CACHE_TIME)) {
-      console.log(`✅ Using cached health status for ${provider.name}: ${cached.isHealthy}`);
+      logger.info(`✅ Using cached health status for ${provider.name}: ${cached.isHealthy}`);
       return cached.isHealthy;
     }
     
     // Perform actual health check
-    console.log(`🏥 Performing health check for ${provider.name}...`);
+    logger.info(`🏥 Performing health check for ${provider.name}...`);
     try {
       const isHealthy = await claraApiService.testProvider(provider);
       
@@ -614,10 +619,10 @@ const ClaraAssistant: React.FC<ClaraAssistantProps> = ({ onPageChange }) => {
         return newCache;
       });
       
-      console.log(`${isHealthy ? '✅' : '❌'} Health check result for ${provider.name}: ${isHealthy}`);
+      logger.info(`${isHealthy ? '✅' : '❌'} Health check result for ${provider.name}: ${isHealthy}`);
       return isHealthy;
-    } catch (error) {
-      console.warn(`⚠️ Health check failed for ${provider.name}:`, error);
+    } catch (err) {
+      logger.warn(`⚠️ Health check failed for ${provider.name}:`, err);
       
       // Cache the failure
       setProviderHealthCache(prev => {

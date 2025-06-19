@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, memo } from 'react';
 import { User, Settings } from 'lucide-react';
 
 interface UserProfileButtonProps {
@@ -6,7 +6,7 @@ interface UserProfileButtonProps {
   onPageChange: (page: string) => void;
 }
 
-const UserProfileButton: React.FC<UserProfileButtonProps> = ({
+const UserProfileButton: React.FC<UserProfileButtonProps> = memo(({
   userName,
   onPageChange
 }) => {
@@ -57,6 +57,6 @@ const UserProfileButton: React.FC<UserProfileButtonProps> = ({
       )}
     </div>
   );
-};
+});
 
 export default UserProfileButton; 

@@ -20,6 +20,21 @@ const ComfyUIModelService = require('./comfyUIModelService.cjs');
 const { platformUpdateService } = require('./updateService.cjs');
 const { debugPaths, logDebugInfo } = require('./debug-paths.cjs');
 
+// Global error handlers
+process.on('uncaughtException', (error) => {
+  log.error('Unhandled Exception:', error);
+  // Optionally, display a dialog to the user or attempt a graceful shutdown
+  dialog.showErrorBox('Unhandled Exception', `An unexpected error occurred: ${error.message}\n\nPlease check the logs for more details.`);
+  // Consider whether to exit the app or allow it to continue
+  // app.quit();
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  log.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  // Optionally, display a dialog or perform other actions
+  dialog.showErrorBox('Unhandled Rejection', `An unexpected promise rejection occurred: ${reason}\n\nPlease check the logs for more details.`);
+});
+
 /**
  * Helper function to show dialogs properly during startup when loading screen is active
  * Temporarily disables alwaysOnTop to allow dialogs to appear above loading screen
